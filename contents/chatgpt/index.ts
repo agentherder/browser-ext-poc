@@ -1,26 +1,23 @@
 import type { PlasmoCSConfig } from "plasmo"
 
+import { getConversationId } from "./id"
+import { getModel } from "./model"
+import { getPrompt } from "./prompt"
+
+const STREAM_DEBOUNCE_MS = 800
+
 export type CaptureDetail = {
   vendor: "openai"
-  model?: string
   url: string
-  chatId?: string | undefined
-  prompt?: string
-  response?: string
   ts: number
+  model: string | null
+  conversationId: string | null
+  prompt: string | null
+  response: string | null
 }
 
 export const config: PlasmoCSConfig = {
   matches: ["https://chatgpt.com/*", "https://chat.openai.com/*"]
-}
-
-const chatPattern = /^\/c\/([^\/?#]+)(?=\/|$)/
-
-export const getChatId = (
-  loc: Location = window.location
-): string | undefined => {
-  const m = chatPattern.exec(loc.pathname)
-  return m ? decodeURIComponent(m[1]) : undefined
 }
 
 /**
@@ -31,13 +28,12 @@ export const getChatId = (
 const emitCapture = (msgEl: HTMLElement) => {
   const detail: CaptureDetail = {
     vendor: "openai",
-    model: document.querySelector("span[data-testid='model-selection']")
-      ?.textContent,
     url: window.location.href,
-    chatId: getChatId(),
-    prompt: msgEl.previousElementSibling?.textContent,
-    response: msgEl.textContent,
-    ts: Date.now()
+    ts: Date.now(),
+    model: getModel(msgEl),
+    conversationId: getConversationId(),
+    prompt: getPrompt(msgEl),
+    response: msgEl.textContent
   }
   console.log("Captured", detail)
   window.dispatchEvent(new CustomEvent("AgentHerderCapture", { detail }))
@@ -57,7 +53,7 @@ const bodyObserver = new MutationObserver((muts) => {
           debounceTimer = setTimeout(() => {
             emitCapture(msgEl)
             msgObserver.disconnect()
-          }, 800) // 0.8 s of inactivity = finished
+          }, STREAM_DEBOUNCE_MS)
         })
 
         msgObserver.observe(msgEl, {
