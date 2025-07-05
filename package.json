@@ -1,8 +1,8 @@
 {
-  "name": "browser-ext-poc",
-  "displayName": "Browser ext poc",
+  "name": "agentherder-browser-ext-poc",
+  "displayName": "AgentHerder PoC",
   "version": "0.0.1",
-  "description": "A basic Plasmo extension.",
+  "description": "Proof of concept that agent prompts can be captured and replayed.",
   "author": "Warren Whipple <w@warrenwhipple.com>",
   "scripts": {
     "dev": "plasmo dev",
