@@ -1,47 +1,56 @@
 /**
  * Lightweight DOM helpers shared across the extension.
  *
- * These stay dependency‑free so we don’t have to ship jQuery/Zepto.
+ * Dependency free.
  */
 
 /**
- * q()
- * ---
- * Returns the **first** element that matches the first selector that
- * yields a non‑null result.  Walks the selectors in order so you can
- * express fallbacks in one call.
+ * Fallback query selector
  *
- * Example:
- *   const modelEl = q(
- *     msgEl,
- *     "[data-message-model-slug]",
- *     "span[data-testid='model-selection']"
- *   )
+ * Applies `parent.querySelector` for each selector,
+ * returning the first match.
  */
-export const q = <T extends Element = HTMLElement>(
-  root: ParentNode,
+export const q = <T extends Element = Element>(
+  parent: ParentNode | null,
   ...selectors: string[]
 ): T | null => {
   for (const sel of selectors) {
-    const found = root.querySelector<T>(sel)
+    const found = parent?.querySelector<T>(sel)
     if (found) return found
   }
   return null
 }
 
 /**
- * qs()
- * ---
- * Like q() but returns *all* matches from the first selector that delivers
- * anything.  Handy when you need a NodeList but still want ordered fallbacks.
+ * Fallback query all selector
+ *
+ * Applies `parent.querySelectorAll` for each selector,
+ * returning the first match that is not empty.
  */
-export const qs = <T extends Element = HTMLElement>(
-  root: ParentNode,
+export const qa = <T extends Element = Element>(
+  parent: ParentNode | null,
   ...selectors: string[]
-): NodeListOf<T> | [] => {
+): NodeListOf<T> | null => {
   for (const sel of selectors) {
-    const list = root.querySelectorAll<T>(sel)
-    if (list.length) return list
+    const found = parent?.querySelectorAll<T>(sel)
+    if (found.length) return found
   }
-  return [] as unknown as NodeListOf<T>
+  return null
+}
+
+/**
+ * Fallback closest selector
+ *
+ * Applies `el.closest` for each selector,
+ * returning the first match.
+ */
+export const qc = <T extends Element = Element>(
+  el: Element | null,
+  ...selectors: string[]
+): T | null => {
+  for (const sel of selectors) {
+    const found = el?.closest<T>(sel)
+    if (found) return found
+  }
+  return null
 }

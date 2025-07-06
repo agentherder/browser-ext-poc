@@ -1,6 +1,6 @@
 const conversationPattern = /^\/c\/([^\/?#]+)(?=\/|$)/
 
-export const getConversationId = (
+export const getChatgptConversationId = (
   loc: Location = window.location
 ): string | null => {
   const m = conversationPattern.exec(loc.pathname)

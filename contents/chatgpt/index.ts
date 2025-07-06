@@ -1,39 +1,39 @@
 import type { PlasmoCSConfig } from "plasmo"
 
-import { getConversationId } from "./id"
-import { getModel } from "./model"
-import { getPrompt } from "./prompt"
+import { getChatgptConversationId } from "./id"
+import { getChatgptDocumentMessages, type MessageInfo } from "./messages"
 
 const STREAM_DEBOUNCE_MS = 800
+
+export type MessageData = Omit<MessageInfo, "element"> & {
+  innerText: string
+}
 
 export type CaptureDetail = {
   vendor: "openai"
   url: string
-  ts: number
-  model: string | null
   conversationId: string | null
-  prompt: string | null
-  response: string | null
+  ts: number
+  messages: MessageData[]
 }
 
 export const config: PlasmoCSConfig = {
   matches: ["https://chatgpt.com/*", "https://chat.openai.com/*"]
 }
 
-/**
- * Emit a capture event once the assistant’s response has fully streamed.
- * We debounce DOM mutations inside the assistant message: if no changes
- * occur for 800 ms, we assume the stream is complete.
- */
-const emitCapture = (msgEl: HTMLElement) => {
+const emitCapture = () => {
+  const infos = getChatgptDocumentMessages()
+  const messages = infos.map<MessageData>(({ element, ...rest }) => ({
+    ...rest,
+    innerText: element?.innerText ?? ""
+  }))
+
   const detail: CaptureDetail = {
     vendor: "openai",
     url: window.location.href,
+    conversationId: getChatgptConversationId(),
     ts: Date.now(),
-    model: getModel(msgEl),
-    conversationId: getConversationId(),
-    prompt: getPrompt(msgEl),
-    response: msgEl.textContent
+    messages
   }
   console.log("Captured", detail)
   window.dispatchEvent(new CustomEvent("AgentHerderCapture", { detail }))
@@ -45,13 +45,14 @@ const bodyObserver = new MutationObserver((muts) => {
       const msgEl = node as HTMLElement | undefined
 
       // Only track new assistant messages
-      if (msgEl?.matches?.("div[data-message-author-role='assistant']")) {
+      if (msgEl?.matches?.("[data-message-author-role='assistant']")) {
+        // Estimate stream completion by debouncing DOM mutations
         let debounceTimer: ReturnType<typeof setTimeout> | undefined
 
         const msgObserver = new MutationObserver(() => {
           if (debounceTimer) clearTimeout(debounceTimer)
           debounceTimer = setTimeout(() => {
-            emitCapture(msgEl)
+            emitCapture()
             msgObserver.disconnect()
           }, STREAM_DEBOUNCE_MS)
         })
