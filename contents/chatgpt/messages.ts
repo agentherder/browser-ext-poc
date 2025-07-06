@@ -1,4 +1,4 @@
-import type { MessageRef } from "~models"
+import { MessageRoleSchema, type MessageRef } from "~models"
 import { qa } from "~utils/dom"
 
 export const getChatgptDocumentMessages = (
@@ -15,16 +15,20 @@ export const getChatgptDocumentMessages = (
 
 const getNodeMessages = (parentNode: ParentNode): MessageRef[] => {
   const testId = (parentNode as HTMLElement).getAttribute("data-testid")
-  const turnId = testId?.includes("turn") ? testId : undefined
+  const turnId = testId?.includes("turn") ? testId : null
   const msgEls = qa(parentNode, "[data-message-id]")
   const msgInfos: MessageRef[] = []
+  if (!msgEls) return msgInfos
   for (const msgEl of msgEls) {
+    const roleString = msgEl.getAttribute("data-message-author-role")
+    const role = MessageRoleSchema.safeParse(roleString).data
+    if (!role) continue
     msgInfos.push({
       id: msgEl.getAttribute("data-message-id"),
       turnId,
-      role: msgEl.getAttribute("data-message-author-role") ?? undefined,
-      model: msgEl.getAttribute("data-message-model-slug") ?? undefined,
-      element: msgEl instanceof HTMLElement ? msgEl : undefined
+      role,
+      model: msgEl.getAttribute("data-message-model-slug"),
+      element: msgEl instanceof HTMLElement ? msgEl : null
     })
   }
   return msgInfos

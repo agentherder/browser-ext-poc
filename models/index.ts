@@ -4,23 +4,35 @@ import * as z from "zod"
 export const TextPartSchema = z.object({
   type: z.literal("text"),
   text: z.string(),
-  // Extension of AI SDK
-  source: z.enum(["innerHTML", "innerText", "copyButton"]).optional()
+  source: z.enum(["innerText"]).optional()
+})
+
+export const HtmlPartSchema = z.object({
+  type: z.literal("html"),
+  text: z.string(),
+  source: z.enum(["innerHTML"]).optional()
 })
 
 /** Based on AI SDK v5 `UIMessagePart` */
-export const MessagePartSchema = z.discriminatedUnion("type", [TextPartSchema])
-
+export const MessagePartSchema = z.discriminatedUnion("type", [
+  TextPartSchema,
+  HtmlPartSchema
+])
 export type MessagePart = z.infer<typeof MessagePartSchema>
+
+export const MessageRoleSchema = z.enum(["user", "assistant", "system", "tool"])
+export type MessageRole = z.infer<typeof MessageRoleSchema>
 
 /** Based on AI SDK v5 `UIMessage` */
 export const MessageSnapshotSchema = z.object({
   id: z.string(),
-  role: z.string().optional(),
+  role: MessageRoleSchema,
   parts: z.array(MessagePartSchema),
+  metadata: z.record(z.unknown()).optional(),
   // Extension of AI SDK
-  turnId: z.string().optional(),
-  model: z.string().optional()
+  schemaVersion: z.literal(1),
+  turnId: z.string().nullable(),
+  model: z.string().nullable()
 })
 
 export type MessageSnapshot = z.infer<typeof MessageSnapshotSchema>
@@ -55,7 +67,7 @@ export const messageToSnapshot = (message: MessageRef): MessageSnapshot => {
     })
   } else {
     parts.push({
-      type: "text",
+      type: "html",
       text: element.innerHTML,
       source: "innerHTML"
     })
