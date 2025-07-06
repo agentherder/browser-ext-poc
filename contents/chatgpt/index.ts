@@ -1,39 +1,25 @@
 import type { PlasmoCSConfig } from "plasmo"
 
+import { messageToSnapshot, type ConversationSnapshot } from "~models"
+
 import { getChatgptConversationId } from "./id"
-import { getChatgptDocumentMessages, type MessageInfo } from "./messages"
+import { getChatgptDocumentMessages } from "./messages"
 
 const STREAM_DEBOUNCE_MS = 800
-
-export type MessageData = Omit<MessageInfo, "element"> & {
-  innerText: string
-}
-
-export type CaptureDetail = {
-  vendor: "openai"
-  url: string
-  conversationId: string | null
-  ts: number
-  messages: MessageData[]
-}
 
 export const config: PlasmoCSConfig = {
   matches: ["https://chatgpt.com/*", "https://chat.openai.com/*"]
 }
 
 const emitCapture = () => {
-  const infos = getChatgptDocumentMessages()
-  const messages = infos.map<MessageData>(({ element, ...rest }) => ({
-    ...rest,
-    innerText: element?.innerText ?? ""
-  }))
-
-  const detail: CaptureDetail = {
+  const messages = getChatgptDocumentMessages()
+  const detail: ConversationSnapshot = {
+    id: getChatgptConversationId(),
     vendor: "openai",
+    ui: "chatgpt",
     url: window.location.href,
-    conversationId: getChatgptConversationId(),
     ts: Date.now(),
-    messages
+    messages: messages.map(messageToSnapshot)
   }
   console.log("Captured", detail)
   window.dispatchEvent(new CustomEvent("AgentHerderCapture", { detail }))
