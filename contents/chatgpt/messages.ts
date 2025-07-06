@@ -15,20 +15,16 @@ export const getChatgptDocumentMessages = (
 
 const getNodeMessages = (parentNode: ParentNode): MessageRef[] => {
   const testId = (parentNode as HTMLElement).getAttribute("data-testid")
-  const turnId = testId?.includes("turn") ? testId : null
-  const msgEls = qa(
-    parentNode,
-    "[data-message-id]",
-    "[data-message-author-role]"
-  )
+  const turnId = testId?.includes("turn") ? testId : undefined
+  const msgEls = qa(parentNode, "[data-message-id]")
   const msgInfos: MessageRef[] = []
   for (const msgEl of msgEls) {
     msgInfos.push({
       id: msgEl.getAttribute("data-message-id"),
       turnId,
-      role: msgEl.getAttribute("data-message-author-role"),
-      model: msgEl.getAttribute("data-message-model-slug"),
-      element: msgEl instanceof HTMLElement ? msgEl : null
+      role: msgEl.getAttribute("data-message-author-role") ?? undefined,
+      model: msgEl.getAttribute("data-message-model-slug") ?? undefined,
+      element: msgEl instanceof HTMLElement ? msgEl : undefined
     })
   }
   return msgInfos
