@@ -30,7 +30,8 @@ const getNodeMessages = (parentNode: ParentNode): MessageRef[] => {
       turnId,
       role,
       model: msgEl.getAttribute("data-message-model-slug"),
-      element: msgEl instanceof HTMLElement ? msgEl : null
+      element: msgEl instanceof HTMLElement ? msgEl : null,
+      scrapedAt: Date.now()
     })
   }
   return msgInfos

@@ -49,6 +49,7 @@ export const MessageSnapshotSchema = z.object({
   // Extension of AI SDK
   turnId: z.string().nullable(),
   model: z.string().nullable(),
+  scrapedAt: z.number(),
   schemaVersion: z.literal(SCHEMA_VERSION)
 })
 /** Based on AI SDK v5 `UIMessage` */
@@ -68,8 +69,13 @@ export const ConversationSnapshotSchema = z.object({
   vendor: z.string(),
   ui: z.string(),
   url: z.string(),
-  ts: z.number(),
   messages: z.array(MessageSnapshotSchema),
+  /** This snapshot timestamp */
+  capturedAt: z.number(),
+  /** First snapshot timestamp inserted into DB */
+  createdAt: z.number().optional(),
+  /** Last snapshot timestamp merged into DB */
+  updatedAt: z.number().optional(),
   schemaVersion: z.literal(SCHEMA_VERSION)
 })
 /**
@@ -120,6 +126,7 @@ export const conversationToSnapshot = (
   const { messages, ...rest } = conversation
   return {
     ...rest,
+    capturedAt: Date.now(),
     messages: messages.map(messageToSnapshot),
     schemaVersion: SCHEMA_VERSION
   }
