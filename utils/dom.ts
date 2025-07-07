@@ -33,7 +33,7 @@ export const qa = <T extends Element = Element>(
 ): NodeListOf<T> | null => {
   for (const sel of selectors) {
     const found = parent?.querySelectorAll<T>(sel)
-    if (found.length) return found
+    if (found?.length) return found
   }
   return null
 }

@@ -1,12 +1,11 @@
 import * as z from "zod"
 
-/**
- * @fileoverview
- * Models for AI agent messages and conversations.
- * Based on the `ai` SDK v5 `UIMessage` and `UIMessagePart` schemas.
- * Some extensions added relevant to scraping web UIs.
- * @see https://github.com/vercel/ai/blob/main/packages/ai/src/ui/ui-messages.ts
- */
+// Models for AI agent messages and conversations.
+// Based on the `ai` SDK v5 `UIMessage` and `UIMessagePart` schemas.
+// Some extensions added relevant to scraping web UIs.
+// @see https://github.com/vercel/ai/blob/main/packages/ai/src/ui/ui-messages.ts
+
+export const SCHEMA_VERSION = 1
 
 export const MessageRoleSchema = z.enum(["user", "assistant", "system"])
 /**
@@ -26,7 +25,7 @@ export type TextPart = z.infer<typeof TextPartSchema>
 
 export const HtmlPartSchema = z.object({
   type: z.literal("html"),
-  text: z.string(),
+  html: z.string(),
   source: z.enum(["innerHTML"]).optional()
 })
 /** Custom part for scraping web chat UIs */
@@ -48,9 +47,9 @@ export const MessageSnapshotSchema = z.object({
   parts: z.array(MessagePartSchema),
   metadata: z.record(z.unknown()).optional(),
   // Extension of AI SDK
-  schemaVersion: z.literal(1),
   turnId: z.string().nullable(),
-  model: z.string().nullable()
+  model: z.string().nullable(),
+  schemaVersion: z.literal(SCHEMA_VERSION)
 })
 /** Based on AI SDK v5 `UIMessage` */
 export type MessageSnapshot = z.infer<typeof MessageSnapshotSchema>
@@ -60,8 +59,8 @@ export type MessageSnapshot = z.infer<typeof MessageSnapshotSchema>
  *
  * Use `messageToSnapshot()` to serialize.
  */
-export type MessageRef = Omit<MessageSnapshot, "parts"> & {
-  element: HTMLElement | undefined
+export type MessageRef = Omit<MessageSnapshot, "parts" | "schemaVersion"> & {
+  element: HTMLElement | null
 }
 
 export const ConversationSnapshotSchema = z.object({
@@ -70,7 +69,8 @@ export const ConversationSnapshotSchema = z.object({
   ui: z.string(),
   url: z.string(),
   ts: z.number(),
-  messages: z.array(MessageSnapshotSchema)
+  messages: z.array(MessageSnapshotSchema),
+  schemaVersion: z.literal(SCHEMA_VERSION)
 })
 /**
  * Wraps an AI agent chat
@@ -84,7 +84,10 @@ export type ConversationSnapshot = z.infer<typeof ConversationSnapshotSchema>
  *
  * Use `conversationToSnapshot()` to serialize.
  */
-export type ConversationRef = Omit<ConversationSnapshot, "messages"> & {
+export type ConversationRef = Omit<
+  ConversationSnapshot,
+  "messages" | "schemaVersion"
+> & {
   messages: MessageRef[]
 }
 
@@ -94,17 +97,21 @@ export const messageToSnapshot = (message: MessageRef): MessageSnapshot => {
   if (message.role === "user") {
     parts.push({
       type: "text",
-      text: element.innerText,
+      text: element?.innerText ?? "",
       source: "innerText"
     })
   } else {
     parts.push({
       type: "html",
-      text: element.innerHTML,
+      html: element?.innerHTML ?? "",
       source: "innerHTML"
     })
   }
-  return { ...rest, parts }
+  return {
+    ...rest,
+    parts,
+    schemaVersion: SCHEMA_VERSION
+  }
 }
 
 export const conversationToSnapshot = (
@@ -113,6 +120,7 @@ export const conversationToSnapshot = (
   const { messages, ...rest } = conversation
   return {
     ...rest,
-    messages: messages.map(messageToSnapshot)
+    messages: messages.map(messageToSnapshot),
+    schemaVersion: SCHEMA_VERSION
   }
 }
