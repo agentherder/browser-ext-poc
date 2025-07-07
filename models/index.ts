@@ -1,29 +1,47 @@
 import * as z from "zod"
 
-/** Based on AI SDK v5 `TextUIPart` */
+/**
+ * @fileoverview
+ * Models for AI agent messages and conversations.
+ * Based on the `ai` SDK v5 `UIMessage` and `UIMessagePart` schemas.
+ * Some extensions added relevant to scraping web UIs.
+ * @see https://github.com/vercel/ai/blob/main/packages/ai/src/ui/ui-messages.ts
+ */
+
+export const MessageRoleSchema = z.enum(["user", "assistant", "system"])
+/**
+ * Based on `ai` SDK `UIMessage["role"]`
+ *
+ * Note the v4 "tool" role was folded into message parts for v5.
+ */
+export type MessageRole = z.infer<typeof MessageRoleSchema>
+
 export const TextPartSchema = z.object({
   type: z.literal("text"),
   text: z.string(),
   source: z.enum(["innerText"]).optional()
 })
+/** Based on `ai` SDK `TextUIPart` */
+export type TextPart = z.infer<typeof TextPartSchema>
 
 export const HtmlPartSchema = z.object({
   type: z.literal("html"),
   text: z.string(),
   source: z.enum(["innerHTML"]).optional()
 })
+/** Custom part for scraping web chat UIs */
+export type HtmlPart = z.infer<typeof HtmlPartSchema>
 
-/** Based on AI SDK v5 `UIMessagePart` */
 export const MessagePartSchema = z.discriminatedUnion("type", [
   TextPartSchema,
   HtmlPartSchema
 ])
+/**
+ * Based on `ai` SDK `UIMessagePart`
+ * with some extensions for scraping web chat UIs
+ */
 export type MessagePart = z.infer<typeof MessagePartSchema>
 
-export const MessageRoleSchema = z.enum(["user", "assistant", "system", "tool"])
-export type MessageRole = z.infer<typeof MessageRoleSchema>
-
-/** Based on AI SDK v5 `UIMessage` */
 export const MessageSnapshotSchema = z.object({
   id: z.string(),
   role: MessageRoleSchema,
@@ -34,9 +52,14 @@ export const MessageSnapshotSchema = z.object({
   turnId: z.string().nullable(),
   model: z.string().nullable()
 })
-
+/** Based on AI SDK v5 `UIMessage` */
 export type MessageSnapshot = z.infer<typeof MessageSnapshotSchema>
 
+/**
+ * In-memory reference to a message.
+ *
+ * Use `messageToSnapshot()` to serialize.
+ */
 export type MessageRef = Omit<MessageSnapshot, "parts"> & {
   element: HTMLElement | undefined
 }
@@ -49,9 +72,18 @@ export const ConversationSnapshotSchema = z.object({
   ts: z.number(),
   messages: z.array(MessageSnapshotSchema)
 })
-
+/**
+ * Wraps an AI agent chat
+ *
+ * `messages` are an extension of the AI SDK `UIMessage` schema.
+ */
 export type ConversationSnapshot = z.infer<typeof ConversationSnapshotSchema>
 
+/**
+ * In-memory reference to a conversation.
+ *
+ * Use `conversationToSnapshot()` to serialize.
+ */
 export type ConversationRef = Omit<ConversationSnapshot, "messages"> & {
   messages: MessageRef[]
 }
