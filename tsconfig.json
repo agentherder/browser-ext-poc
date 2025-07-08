@@ -1,6 +1,6 @@
 {
   "extends": "plasmo/templates/tsconfig.base",
-  "include": [".plasmo/index.d.ts", "./**/*.ts", "./**/*.tsx"],
+  "include": [".plasmo/index.d.ts", "src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     /* Core compiler behavior */
@@ -11,7 +11,7 @@
 
     /* Project structure */
     "baseUrl": ".",
-    "paths": { "~*": ["./*"] },
+    "paths": { "~*": ["./src/*"] },
 
     /* Type-safety */
     "strict": true,
