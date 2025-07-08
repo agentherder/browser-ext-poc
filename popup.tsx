@@ -1,24 +1,38 @@
 import { useState } from "react"
 
+import { searchMessages } from "./db"
+import type { Message } from "./types"
+
 function IndexPopup() {
-  const [data, setData] = useState("")
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<Message[]>([])
+
+  const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const q = e.target.value
+    setQuery(q)
+    const hits = await searchMessages(q)
+    setResults(hits)
+  }
+
+  const copyToClipboard = (content: string) => {
+    navigator.clipboard.writeText(content)
+  }
 
   return (
-    <div
-      style={{
-        padding: 16
-      }}>
-      <h2>
-        Welcome to your{" "}
-        <a href="https://www.plasmo.com" target="_blank">
-          Plasmo
-        </a>{" "}
-        Extension!
-      </h2>
-      <input onChange={(e) => setData(e.target.value)} value={data} />
-      <a href="https://docs.plasmo.com" target="_blank">
-        View Docs
-      </a>
+    <div style={{ padding: 16 }}>
+      <input
+        id="search"
+        value={query}
+        onChange={onChange}
+        placeholder="Search messages..."
+      />
+      <ul id="results">
+        {results.map((m) => (
+          <li key={m.id} onClick={() => copyToClipboard(m.content)}>
+            <b>{m.role}</b>: {m.content.slice(0, 80)}…
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

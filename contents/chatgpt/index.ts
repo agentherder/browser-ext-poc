@@ -1,5 +1,6 @@
 import type { PlasmoCSConfig } from "plasmo"
 
+import { addMessage } from "~db"
 import { messageToSnapshot, type ConversationSnapshot } from "~models"
 
 import { getChatgptConversationId } from "./id"
@@ -11,8 +12,14 @@ export const config: PlasmoCSConfig = {
   matches: ["https://chatgpt.com/*", "https://chat.openai.com/*"]
 }
 
-const emitCapture = () => {
+const emitCapture = async () => {
   const messages = getChatgptDocumentMessages()
+  for (const m of messages) {
+    if (m.role === "user" || m.role === "assistant") {
+      const text = m.element?.innerText ?? ""
+      await addMessage(m.role, text, window.location.href)
+    }
+  }
   const detail: ConversationSnapshot = {
     id: getChatgptConversationId(),
     vendor: "openai",
