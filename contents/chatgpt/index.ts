@@ -12,13 +12,16 @@ export const config: PlasmoCSConfig = {
 }
 
 const emitCapture = () => {
+  const id = getChatgptConversationId()
+  if (!id) return
   const messages = getChatgptDocumentMessages()
   const detail: ConversationSnapshot = {
-    id: getChatgptConversationId(),
+    schemaVersion: 1,
+    id,
     vendor: "openai",
     ui: "chatgpt",
     url: window.location.href,
-    ts: Date.now(),
+    capturedAt: Date.now(),
     messages: messages.map(messageToSnapshot)
   }
   console.log("Captured", detail)
