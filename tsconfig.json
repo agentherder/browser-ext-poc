@@ -11,7 +11,7 @@
 
     /* Project structure */
     "baseUrl": ".",
-    "paths": { "~*": ["./*"] },
+    "paths": { "~*": ["./src/*"] },
 
     /* Type-safety */
     "strict": true,

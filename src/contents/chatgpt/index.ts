@@ -1,6 +1,6 @@
 import type { PlasmoCSConfig } from "plasmo"
 
-import { messageToSnapshot, type ConversationSnapshot } from "~models"
+import { messageToSnapshot, type ConversationSnapshot } from "~schemas"
 
 import { getChatgptConversationId } from "./id"
 import { getChatgptDocumentMessages } from "./messages"

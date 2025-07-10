@@ -1,4 +1,4 @@
-import { MessageRoleSchema, type MessageRef } from "~models"
+import { MessageRoleSchema, type MessageRef } from "~schemas"
 import { qa } from "~utils/dom"
 
 export const getChatgptDocumentMessages = (
