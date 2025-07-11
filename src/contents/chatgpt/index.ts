@@ -1,9 +1,6 @@
 import type { PlasmoCSConfig } from "plasmo"
 
-import { messageToSnapshot, type ConversationSnapshot } from "~schemas"
-
-import { getChatgptConversationId } from "./id"
-import { getChatgptDocumentMessages } from "./messages"
+import { scrapeChatgptConversation } from "./conversation"
 
 const STREAM_DEBOUNCE_MS = 800
 
@@ -12,18 +9,7 @@ export const config: PlasmoCSConfig = {
 }
 
 const emitCapture = () => {
-  const id = getChatgptConversationId()
-  if (!id) return
-  const messages = getChatgptDocumentMessages()
-  const detail: ConversationSnapshot = {
-    schemaVersion: 1,
-    id,
-    vendor: "openai",
-    ui: "chatgpt",
-    url: window.location.href,
-    capturedAt: Date.now(),
-    messages: messages.map(messageToSnapshot)
-  }
+  const detail = scrapeChatgptConversation()
   console.log("Captured", detail)
   window.dispatchEvent(new CustomEvent("AgentHerderCapture", { detail }))
 }
